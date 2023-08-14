@@ -1,8 +1,11 @@
 import gravatar from "gravatar";
 import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
 import User from "../../models/user.js";
 import { ctrlWrapper } from "../../decorator/index.js";
-import { HttpError } from "../../helpers/index.js";
+import { HttpError, sendEmail } from "../../helpers/index.js";
+
+const {BASE_URL} = process.env;
 
 const registered = async (req, res) => {
   const { email, password } = req.body;
@@ -13,13 +16,21 @@ const registered = async (req, res) => {
 
   const hashPassword = await bcrypt.hash(password, 10);
   const avatarURL = gravatar.url(email);
-  console.log(avatarURL);
+  const verificationCode = nanoid();
+  // console.log(avatarURL);
 
   const newUser = await User.create({
     ...req.body,
     avatarURL,
-    password: hashPassword,
-  });
+    password: hashPassword, verificationCode});
+
+const verifyEmail = {
+  to: email,
+  subject: "Verify email",
+  html: `<a href="${BASE_URL}/api/auth/verify/${verificationCode}" target"_blank">Click verify email</a>`, 
+};
+
+  await sendEmail(verifyEmail);
 
   res.status(201).json({
     name: newUser.name,
@@ -28,5 +39,6 @@ const registered = async (req, res) => {
     avatarURL: newUser.avatarURL,
   });
 };
+
 
 export default ctrlWrapper(registered);
