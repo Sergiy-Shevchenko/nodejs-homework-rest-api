@@ -13,6 +13,7 @@ const registered = async (req, res) => {
   if (user) {
     throw HttpError(409, "Email in use");
   }
+  
 
   const hashPassword = await bcrypt.hash(password, 10);
   const avatarURL = gravatar.url(email);
@@ -30,7 +31,9 @@ const verifyEmail = {
   html: `<a href="${BASE_URL}/api/auth/verify/${verificationCode}" target"_blank">Click verify email</a>`, 
 };
 
-  await sendEmail(verifyEmail);
+  await sendEmail(verifyEmail, 
+    console.log("Email sent")
+    );
 
   res.status(201).json({
     name: newUser.name,
